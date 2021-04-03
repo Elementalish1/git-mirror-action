@@ -18,19 +18,19 @@ const (
 	MirrorRemote   = "mirror"
 
 	// name used as temporary directory
-	TempDir = "/tmp/"
+	TempDir = "tmp"
 
 	// error messages
-	ErrURLNotHTTPS   = "url is not https"
-	ErrNoOriginalURL = "no original repository url provided"
-	ErrNoMirrorURL   = "no mirror repository url provided"
-	ErrNoPAT         = "no personal access token provided"
+	ErrURLNotHTTPS             = "url is not https"
+	ErrNoOriginalURL           = "no original repository url provided"
+	ErrNoMirrorURL             = "no mirror repository url provided"
+	ErrNoPAT                   = "no personal access token provided"
 	ErrFailedToBase64DecodePAT = "failed to decode PAT from b64"
 
 	// info messages
 	InfoNoOriginalBranch = "no original branch provided, using 'master'"
 	InfoNoMirrorBranch   = "no mirror branch provided, using 'mirror'"
-	InfoUsingForce = "git will now use --force to push"
+	InfoUsingForce       = "git will now use --force to push"
 )
 
 // config struct which holds all information required
@@ -40,7 +40,7 @@ type config struct {
 	mirrorURL      string
 	mirrorBranch   string
 	pat            string
-	useForce		bool
+	useForce       bool
 }
 
 type byteSlice []byte
@@ -110,20 +110,20 @@ func main() {
 		mirrorURL:      mirrorURL,
 		mirrorBranch:   mirrorBranch,
 		pat:            string(pat),
-		useForce: useForce,
+		useForce:       useForce,
 	}
 
 	// convert URLs to use PAT
 	err = config.usePAT()
 	if err != nil {
-		log.Println(err)
+		githubactions.Fatalf(err.Error())
 		return
 	}
 
 	// init git repository
 	out, err := config.gitInit()
 	if err != nil {
-		log.Println(err)
+		githubactions.Fatalf(err.Error())
 		log.Printf("Output: %v\n", out)
 		return
 	}
@@ -131,7 +131,7 @@ func main() {
 	// add upstream remote (url of repo we want to clone)
 	out, err = config.addRemote(UpstreamRemote, config.originalURL)
 	if err != nil {
-		log.Println(err)
+		githubactions.Fatalf(err.Error())
 		log.Printf("Output: %v\n", out)
 		return
 	}
@@ -139,7 +139,7 @@ func main() {
 	// add mirror remote (url of repo we want to mirror to)
 	out, err = config.addRemote(MirrorRemote, config.mirrorURL)
 	if err != nil {
-		log.Println(err)
+		githubactions.Fatalf(err.Error())
 		log.Printf("Output: %v\n", out)
 		return
 	}
@@ -147,7 +147,7 @@ func main() {
 	// checks out branch on upstream remote
 	out, err = config.checkout(UpstreamRemote, config.originalBranch)
 	if err != nil {
-		log.Println(err)
+		githubactions.Fatalf(err.Error())
 		log.Printf("Output: %v\n", out)
 		return
 	}
@@ -155,7 +155,7 @@ func main() {
 	// pulls branch on upstream remote
 	out, err = config.pull(UpstreamRemote, config.originalBranch)
 	if err != nil {
-		log.Println(err)
+		githubactions.Fatalf(err.Error())
 		log.Printf("Output: %v\n", out)
 		return
 	}
@@ -163,7 +163,7 @@ func main() {
 	// makes new branch
 	out, err = config.branch(config.mirrorBranch)
 	if err != nil {
-		log.Println(err)
+		githubactions.Fatalf(err.Error())
 		log.Printf("Output: %v\n", out)
 		return
 	}
@@ -171,7 +171,7 @@ func main() {
 	// pushes new branch to mirror remote
 	out, err = config.push(MirrorRemote, config.mirrorBranch)
 	if err != nil {
-		log.Println(err)
+		githubactions.Fatalf(err.Error())
 		log.Printf("Output: %v\n", out)
 	}
 }
@@ -196,7 +196,7 @@ func (c *config) checkout(remote string, branch string) (output string, err erro
 }
 
 // pulls specific branch from specific remote
-func (c *config)pull(remote string, branch string) (output string, err error) {
+func (c *config) pull(remote string, branch string) (output string, err error) {
 	log.Printf("pulling: %v/%v", remote, branch)
 	return command("pull", remote, branch)
 }
@@ -220,13 +220,14 @@ func (c *config) branch(name string) (output string, err error) {
 // executes git commands in the TempDir folder
 func command(args ...string) (out string, err error) {
 
-	pathArgs := []string{"-C", TempDir}
+	cwd, _ := os.Getwd()
+	pathArgs := []string{"-C", fmt.Sprintf("%v/%v", cwd, TempDir)}
 	args = append(pathArgs, args...)
 
 	cmd := exec.Command("git", args...)
 
 	// makes sure the TempDir exist
-	if _, err := os.Stat(TempDir); os.IsNotExist(err) {
+	if _, err := os.Stat(fmt.Sprintf("%v/%v", cwd, TempDir)); os.IsNotExist(err) {
 		err := os.Mkdir(TempDir, 0777)
 		if err != nil {
 			return "", err
