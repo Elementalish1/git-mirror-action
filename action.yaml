@@ -14,7 +14,7 @@ inputs:
   mirrorBranch:
     description: branch that will be created or pushed into. Defaults to `mirror`
     required: false
-  patEncoded:
+  PAT:
     description: Base64 encoded Personal Access Token
     required: true
   useForce:
