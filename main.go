@@ -25,7 +25,7 @@ const (
 	ErrNoOriginalURL = "no original repository url provided"
 	ErrNoMirrorURL   = "no mirror repository url provided"
 	ErrNoPAT         = "no personal access token provided"
-	ErrFailedToBase64DecodePAT
+	ErrFailedToBase64DecodePAT = "failed to decode PAT from b64"
 
 	// info messages
 	InfoNoOriginalBranch = "no original branch provided, using 'master'"
@@ -76,7 +76,7 @@ func main() {
 	}
 
 	// get Personal Access Token encoded in base64 input (required)
-	patEncoded := githubactions.GetInput("PAT")
+	patEncoded := githubactions.GetInput("pat")
 	if patEncoded == "" {
 		githubactions.Fatalf(ErrNoPAT)
 		return
