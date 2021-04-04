@@ -120,8 +120,6 @@ func main() {
 		return
 	}
 
-	log.Printf("%+v", config)
-
 	// init git repository
 	out, err := config.gitInit()
 	if err != nil {
@@ -240,7 +238,6 @@ func command(args ...string) (out string, err error) {
 	var output byteSlice
 	output, err = cmd.Output()
 	if err != nil {
-		log.Println(err)
 		return "", err
 	}
 
