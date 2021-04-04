@@ -17,7 +17,7 @@ inputs:
   pat:
     description: Base64 encoded Personal Access Token
     required: true
-  useForce:
+  force:
     description: whether to use the `--force` argument when pushing to the mirror repository. Defaults to false
     required: false
   verbose:

@@ -46,7 +46,7 @@ const (
 	MirrorBranchInput = "mirrorBranch"
 
 	PATInput        = "pat"
-	UseForceInput   = "useForce"
+	UseForceInput   = "force"
 	useVerboseInput = "verbose"
 
 	// input responses
@@ -117,7 +117,7 @@ func main() {
 	// add true PAT to mask
 	githubactions.AddMask(string(pat))
 
-	// get useForce input to see if push can use the argument `--force`
+	// get force input to see if push can use the argument `--force`
 	var useForce = false
 	useForceInput := githubactions.GetInput(UseForceInput)
 	if useForceInput == UseForceTrue {
@@ -125,6 +125,7 @@ func main() {
 		useForce = true
 	}
 
+	// get verbose input to check whether or not to use verbose mode
 	var useVerbose = false
 	useVerboseInput := githubactions.GetInput(useVerboseInput)
 	if useVerboseInput == UseVerboseTrue {
