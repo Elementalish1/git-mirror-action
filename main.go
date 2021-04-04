@@ -36,17 +36,22 @@ const (
 	InfoNoOriginalBranch = "no original branch provided, using 'master'"
 	InfoNoMirrorBranch   = "no mirror branch provided, using 'mirror'"
 	InfoUsingForce       = "git will now use --force to push"
+	InfoUsingVerbose     = "using verbose mode"
 
 	// input constants
 	OriginalURLInput    = "originalURL"
 	OriginalBranchInput = "originalBranch"
-	MirrorURLInput      = "mirrorURL"
-	MirrorBranchInput   = "mirrorBranch"
-	PATInput            = "pat"
-	UseForceInput       = "useForce"
+
+	MirrorURLInput    = "mirrorURL"
+	MirrorBranchInput = "mirrorBranch"
+
+	PATInput        = "pat"
+	UseForceInput   = "useForce"
+	useVerboseInput = "verbose"
 
 	// input responses
-	UseForceYes = "yes"
+	UseForceTrue   = "true"
+	UseVerboseTrue = "true"
 )
 
 // config struct which holds all information required
@@ -57,6 +62,7 @@ type config struct {
 	mirrorBranch   string
 	pat            string
 	useForce       bool
+	useVerbose     bool
 }
 
 type byteSlice []byte
@@ -114,9 +120,16 @@ func main() {
 	// get useForce input to see if push can use the argument `--force`
 	var useForce = false
 	useForceInput := githubactions.GetInput(UseForceInput)
-	if useForceInput == UseForceYes {
+	if useForceInput == UseForceTrue {
 		log.Printf(InfoUsingForce)
 		useForce = true
+	}
+
+	var useVerbose = false
+	useVerboseInput := githubactions.GetInput(useVerboseInput)
+	if useVerboseInput == UseVerboseTrue {
+		log.Println(InfoUsingVerbose)
+		useVerbose = true
 	}
 
 	// make config
@@ -127,6 +140,7 @@ func main() {
 		mirrorBranch:   mirrorBranch,
 		pat:            string(pat),
 		useForce:       useForce,
+		useVerbose:     useVerbose,
 	}
 
 	// convert URLs to use PAT
@@ -201,47 +215,47 @@ func main() {
 
 // initialize git repository
 func (c *config) gitInit() (output string, err error) {
-	githubactions.Debugf("initializing git")
-	return command("init")
+	log.Printf("initializing git")
+	return c.command("init")
 }
 
 // adds new remote to local git repository
 // also fetches branches from the repository (--fetch flag at the end)
 func (c *config) addRemote(name string, repo string) (output string, err error) {
-	githubactions.Debugf("adding remote: %v\n", name)
-	return command("remote", "add", name, repo, "--fetch")
+	log.Printf("adding remote: %v\n", name)
+	return c.command("remote", "add", name, repo, "--fetch")
 }
 
 // checks out specific branch from specific remote in local git repository
 func (c *config) checkout(remote string, branch string) (output string, err error) {
-	githubactions.Debugf("checking out: %v/%v\n", remote, branch)
-	return command("checkout", fmt.Sprintf("%v/%v", remote, branch))
+	log.Printf("checking out: %v/%v\n", remote, branch)
+	return c.command("checkout", fmt.Sprintf("%v/%v", remote, branch))
 }
 
 // pulls specific branch from specific remote
 func (c *config) pull(remote string, branch string) (output string, err error) {
-	githubactions.Debugf("pulling: %v/%v", remote, branch)
-	return command("pull", remote, branch)
+	log.Printf("pulling: %v/%v", remote, branch)
+	return c.command("pull", remote, branch)
 }
 
 // pushes to specific branch on remote
 func (c *config) push(remote string, branch string) (output string, err error) {
-	githubactions.Debugf("pushing: %v/%v\n", remote, branch)
+	log.Printf("pushing: %v/%v\n", remote, branch)
 	if c.useForce {
-		return command("push", "--set-upstream", remote, branch, "--force")
+		return c.command("push", "--set-upstream", remote, branch, "--force")
 	}
 
-	return command("push", "--set-upstream", remote, branch)
+	return c.command("push", "--set-upstream", remote, branch)
 }
 
 // creates a new branch with specific name
 func (c *config) branch(name string) (output string, err error) {
-	githubactions.Debugf("creating branch: %v", name)
-	return command("branch", name)
+	log.Printf("creating branch: %v", name)
+	return c.command("branch", name)
 }
 
 // executes git commands in the TempDir folder
-func command(args ...string) (out string, err error) {
+func (c *config) command(args ...string) (out string, err error) {
 
 	cwd, _ := os.Getwd()
 	pathArgs := []string{"-C", fmt.Sprintf("%v/%v", cwd, TempDir)}
@@ -249,7 +263,10 @@ func command(args ...string) (out string, err error) {
 
 	cmd := exec.Command("git", args...)
 
-	log.Println(cmd.Args)
+	// verbose mode
+	if c.useVerbose {
+		log.Println(cmd.Args)
+	}
 
 	// makes sure the TempDir exist
 	if _, err := os.Stat(fmt.Sprintf("%v/%v", cwd, TempDir)); os.IsNotExist(err) {

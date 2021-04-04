@@ -20,6 +20,9 @@ inputs:
   useForce:
     description: whether to use the `--force` argument when pushing to the mirror repository. Defaults to false
     required: false
+  verbose:
+    description: whether or not you want the output to be verbose. Defaults to false
+    required: false
 
 runs:
   using: docker
