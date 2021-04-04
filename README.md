@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: mirror
-        uses: Mathisco-01/git-mirror-action@v1
+        uses: mathisve/git-mirror-action@v1
         with:
           originalURL: https://github.com/torvalds/linux.git
           mirrorURL: https://github.com/mathisve/mirror.git
@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: mirror
-        uses: Mathisco-01/git-mirror-action@v1
+        uses: mathisve/git-mirror-action@v1
         with:
           originalURL: https://github.com/moby/moby.git
           originalBranch: 20.10
