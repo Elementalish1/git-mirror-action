@@ -57,7 +57,7 @@ func main() {
 	// get originalBranch input (optional)
 	originalBranch := githubactions.GetInput("originalBranch")
 	if originalBranch == "" {
-		log.Println(InfoNoOriginalBranch)
+		githubactions.Warningf(InfoNoOriginalBranch)
 		originalBranch = "master"
 	}
 
@@ -71,8 +71,8 @@ func main() {
 	// get mirrorBranch input (optional)
 	mirrorBranch := githubactions.GetInput("originalBranch")
 	if mirrorBranch == "" {
-		log.Println(InfoNoMirrorBranch)
-		mirrorBranch = "master"
+		githubactions.Warningf(InfoNoMirrorBranch)
+		mirrorBranch = "mirror"
 	}
 
 	// get Personal Access Token encoded in base64 input (required)
@@ -99,7 +99,7 @@ func main() {
 	var useForce = false
 	useForceInput := githubactions.GetInput("useForce")
 	if useForceInput == "yes" {
-		log.Println(InfoUsingForce)
+		githubactions.Warningf(InfoUsingForce)
 		useForce = true
 	}
 
@@ -120,11 +120,13 @@ func main() {
 		return
 	}
 
+	log.Printf("%+v", config)
+
 	// init git repository
 	out, err := config.gitInit()
 	if err != nil {
 		githubactions.Fatalf(err.Error())
-		log.Printf("Output: %v\n", out)
+		githubactions.Warningf("Output: %v\n", out)
 		return
 	}
 
@@ -132,7 +134,7 @@ func main() {
 	out, err = config.addRemote(UpstreamRemote, config.originalURL)
 	if err != nil {
 		githubactions.Fatalf(err.Error())
-		log.Printf("Output: %v\n", out)
+		githubactions.Warningf("Output: %v\n", out)
 		return
 	}
 
@@ -140,7 +142,7 @@ func main() {
 	out, err = config.addRemote(MirrorRemote, config.mirrorURL)
 	if err != nil {
 		githubactions.Fatalf(err.Error())
-		log.Printf("Output: %v\n", out)
+		githubactions.Warningf("Output: %v\n", out)
 		return
 	}
 
@@ -148,7 +150,7 @@ func main() {
 	out, err = config.checkout(UpstreamRemote, config.originalBranch)
 	if err != nil {
 		githubactions.Fatalf(err.Error())
-		log.Printf("Output: %v\n", out)
+		githubactions.Warningf("Output: %v\n", out)
 		return
 	}
 
@@ -156,7 +158,7 @@ func main() {
 	out, err = config.pull(UpstreamRemote, config.originalBranch)
 	if err != nil {
 		githubactions.Fatalf(err.Error())
-		log.Printf("Output: %v\n", out)
+		githubactions.Warningf("Output: %v\n", out)
 		return
 	}
 
@@ -164,7 +166,7 @@ func main() {
 	out, err = config.branch(config.mirrorBranch)
 	if err != nil {
 		githubactions.Fatalf(err.Error())
-		log.Printf("Output: %v\n", out)
+		githubactions.Warningf("Output: %v\n", out)
 		return
 	}
 
@@ -172,7 +174,7 @@ func main() {
 	out, err = config.push(MirrorRemote, config.mirrorBranch)
 	if err != nil {
 		githubactions.Fatalf(err.Error())
-		log.Printf("Output: %v\n", out)
+		githubactions.Warningf("Output: %v\n", out)
 	}
 }
 
