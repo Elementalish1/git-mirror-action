@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -56,7 +57,7 @@ func main() {
 	// get originalBranch input (optional)
 	originalBranch := githubactions.GetInput("originalBranch")
 	if originalBranch == "" {
-		githubactions.Warningf(InfoNoOriginalBranch)
+		log.Printf(InfoNoOriginalBranch)
 		originalBranch = "master"
 	}
 
@@ -70,7 +71,7 @@ func main() {
 	// get mirrorBranch input (optional)
 	mirrorBranch := githubactions.GetInput("mirrorBranch")
 	if mirrorBranch == "" {
-		githubactions.Warningf(InfoNoMirrorBranch)
+		log.Printf(InfoNoMirrorBranch)
 		mirrorBranch = "mirror"
 	}
 
@@ -98,7 +99,7 @@ func main() {
 	var useForce = false
 	useForceInput := githubactions.GetInput("useForce")
 	if useForceInput == "yes" {
-		githubactions.Warningf(InfoUsingForce)
+		log.Printf(InfoUsingForce)
 		useForce = true
 	}
 
@@ -122,32 +123,36 @@ func main() {
 	// init git repository
 	out, err := config.gitInit()
 	if err != nil {
+		log.Printf("Output: %v\n", out)
 		githubactions.Fatalf(err.Error())
-		githubactions.Warningf("Output: %v\n", out)
+
 		return
 	}
 
 	// add upstream remote (url of repo we want to clone)
 	out, err = config.addRemote(UpstreamRemote, config.originalURL)
 	if err != nil {
+		log.Printf("Output: %v\n", out)
 		githubactions.Fatalf(err.Error())
-		githubactions.Warningf("Output: %v\n", out)
+
 		return
 	}
 
 	// add mirror remote (url of repo we want to mirror to)
 	out, err = config.addRemote(MirrorRemote, config.mirrorURL)
 	if err != nil {
+		log.Printf("Output: %v\n", out)
 		githubactions.Fatalf(err.Error())
-		githubactions.Warningf("Output: %v\n", out)
+
 		return
 	}
 
 	// checks out branch on upstream remote
 	out, err = config.checkout(UpstreamRemote, config.originalBranch)
 	if err != nil {
+		log.Printf("Output: %v\n", out)
 		githubactions.Fatalf(err.Error())
-		githubactions.Warningf("Output: %v\n", out)
+
 		return
 	}
 
@@ -155,23 +160,26 @@ func main() {
 	out, err = config.pull(UpstreamRemote, config.originalBranch)
 	if err != nil {
 		githubactions.Fatalf(err.Error())
-		githubactions.Warningf("Output: %v\n", out)
+		log.Printf("Output: %v\n", out)
 		return
 	}
 
 	// makes new branch
 	out, err = config.branch(config.mirrorBranch)
 	if err != nil {
+		log.Printf("Output: %v\n", out)
 		githubactions.Fatalf(err.Error())
-		githubactions.Warningf("Output: %v\n", out)
+
 		return
 	}
 
 	// pushes new branch to mirror remote
 	out, err = config.push(MirrorRemote, config.mirrorBranch)
 	if err != nil {
+		log.Printf("Output: %v\n", out)
 		githubactions.Fatalf(err.Error())
-		githubactions.Warningf("Output: %v\n", out)
+
+		return
 	}
 }
 
@@ -224,6 +232,8 @@ func command(args ...string) (out string, err error) {
 	args = append(pathArgs, args...)
 
 	cmd := exec.Command("git", args...)
+
+	log.Println(cmd.Args)
 
 	// makes sure the TempDir exist
 	if _, err := os.Stat(fmt.Sprintf("%v/%v", cwd, TempDir)); os.IsNotExist(err) {
