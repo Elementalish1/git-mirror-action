@@ -13,9 +13,14 @@ import (
 )
 
 const (
+
 	// name of remote urls
 	UpstreamRemote = "upstream"
 	MirrorRemote   = "mirror"
+
+	// default branch names
+	OriginalDefaultBranch = "master"
+	MirrorDefaultBranch   = "mirror"
 
 	// name used as temporary directory
 	TempDir = "tmp"
@@ -31,6 +36,17 @@ const (
 	InfoNoOriginalBranch = "no original branch provided, using 'master'"
 	InfoNoMirrorBranch   = "no mirror branch provided, using 'mirror'"
 	InfoUsingForce       = "git will now use --force to push"
+
+	// input constants
+	OriginalURLInput    = "originalURL"
+	OriginalBranchInput = "originalBranch"
+	MirrorURLInput      = "mirrorURL"
+	MirrorBranchInput   = "mirrorBranch"
+	PATInput            = "pat"
+	UseForceInput       = "useForce"
+
+	// input responses
+	UseForceYes = "yes"
 )
 
 // config struct which holds all information required
@@ -48,35 +64,35 @@ type byteSlice []byte
 func main() {
 
 	// get originalURL input (required)
-	originalURL := githubactions.GetInput("originalURL")
+	originalURL := githubactions.GetInput(OriginalURLInput)
 	if originalURL == "" {
 		githubactions.Fatalf(ErrNoOriginalURL)
 		return
 	}
 
 	// get originalBranch input (optional)
-	originalBranch := githubactions.GetInput("originalBranch")
+	originalBranch := githubactions.GetInput(OriginalBranchInput)
 	if originalBranch == "" {
 		log.Printf(InfoNoOriginalBranch)
-		originalBranch = "master"
+		originalBranch = OriginalDefaultBranch
 	}
 
 	// get mirrorURL input (required)
-	mirrorURL := githubactions.GetInput("originalURL")
+	mirrorURL := githubactions.GetInput(MirrorURLInput)
 	if mirrorURL == "" {
 		githubactions.Fatalf(ErrNoMirrorURL)
 		return
 	}
 
 	// get mirrorBranch input (optional)
-	mirrorBranch := githubactions.GetInput("mirrorBranch")
+	mirrorBranch := githubactions.GetInput(MirrorBranchInput)
 	if mirrorBranch == "" {
 		log.Printf(InfoNoMirrorBranch)
-		mirrorBranch = "mirror"
+		mirrorBranch = MirrorDefaultBranch
 	}
 
 	// get Personal Access Token encoded in base64 input (required)
-	patEncoded := githubactions.GetInput("pat")
+	patEncoded := githubactions.GetInput(PATInput)
 	if patEncoded == "" {
 		githubactions.Fatalf(ErrNoPAT)
 		return
@@ -97,8 +113,8 @@ func main() {
 
 	// get useForce input to see if push can use the argument `--force`
 	var useForce = false
-	useForceInput := githubactions.GetInput("useForce")
-	if useForceInput == "yes" {
+	useForceInput := githubactions.GetInput(UseForceInput)
+	if useForceInput == UseForceYes {
 		log.Printf(InfoUsingForce)
 		useForce = true
 	}
