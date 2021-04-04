@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -69,7 +68,7 @@ func main() {
 	}
 
 	// get mirrorBranch input (optional)
-	mirrorBranch := githubactions.GetInput("originalBranch")
+	mirrorBranch := githubactions.GetInput("mirrorBranch")
 	if mirrorBranch == "" {
 		githubactions.Warningf(InfoNoMirrorBranch)
 		mirrorBranch = "mirror"
@@ -178,32 +177,32 @@ func main() {
 
 // initialize git repository
 func (c *config) gitInit() (output string, err error) {
-	log.Printf("initializing git")
+	githubactions.Debugf("initializing git")
 	return command("init")
 }
 
 // adds new remote to local git repository
 // also fetches branches from the repository (--fetch flag at the end)
 func (c *config) addRemote(name string, repo string) (output string, err error) {
-	log.Printf("adding remote: %v\n", name)
+	githubactions.Debugf("adding remote: %v\n", name)
 	return command("remote", "add", name, repo, "--fetch")
 }
 
 // checks out specific branch from specific remote in local git repository
 func (c *config) checkout(remote string, branch string) (output string, err error) {
-	log.Printf("checking out: %v/%v\n", remote, branch)
+	githubactions.Debugf("checking out: %v/%v\n", remote, branch)
 	return command("checkout", fmt.Sprintf("%v/%v", remote, branch))
 }
 
 // pulls specific branch from specific remote
 func (c *config) pull(remote string, branch string) (output string, err error) {
-	log.Printf("pulling: %v/%v", remote, branch)
+	githubactions.Debugf("pulling: %v/%v", remote, branch)
 	return command("pull", remote, branch)
 }
 
 // pushes to specific branch on remote
 func (c *config) push(remote string, branch string) (output string, err error) {
-	log.Printf("pushing: %v/%v\n", remote, branch)
+	githubactions.Debugf("pushing: %v/%v\n", remote, branch)
 	if c.useForce {
 		return command("push", "--set-upstream", remote, branch, "--force")
 	}
@@ -213,7 +212,7 @@ func (c *config) push(remote string, branch string) (output string, err error) {
 
 // creates a new branch with specific name
 func (c *config) branch(name string) (output string, err error) {
-	log.Printf("creating branch: %v", name)
+	githubactions.Debugf("creating branch: %v", name)
 	return command("branch", name)
 }
 
