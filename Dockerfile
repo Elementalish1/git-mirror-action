@@ -3,7 +3,7 @@ FROM golang:1.16
 WORKDIR /src
 COPY . .
 
-ENV GO111MODULE=on
+#ENV GO111MODULE=on
 
 RUN go build -o /bin/action
 

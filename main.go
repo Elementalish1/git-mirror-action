@@ -12,48 +12,6 @@ import (
 	"github.com/sethvargo/go-githubactions"
 )
 
-const (
-
-	// name of remote urls
-	UpstreamRemote = "upstream"
-	MirrorRemote   = "mirror"
-
-	// default branch names
-	OriginalDefaultBranch = "master"
-	MirrorDefaultBranch   = "mirror"
-
-	// name used as temporary directory
-	TempDir = "tmp"
-
-	// error messages
-	ErrURLNotHTTPS             = "url is not https"
-	ErrNoOriginalURL           = "no original repository url provided"
-	ErrNoMirrorURL             = "no mirror repository url provided"
-	ErrNoPAT                   = "no personal access token provided"
-	ErrFailedToBase64DecodePAT = "failed to decode PAT from b64"
-
-	// info messages
-	InfoNoOriginalBranch = "no original branch provided, using 'master'"
-	InfoNoMirrorBranch   = "no mirror branch provided, using 'mirror'"
-	InfoUsingForce       = "git will now use --force to push"
-	InfoUsingVerbose     = "using verbose mode"
-
-	// input constants
-	OriginalURLInput    = "originalURL"
-	OriginalBranchInput = "originalBranch"
-
-	MirrorURLInput    = "mirrorURL"
-	MirrorBranchInput = "mirrorBranch"
-
-	PATInput        = "pat"
-	UseForceInput   = "force"
-	useVerboseInput = "verbose"
-
-	// input responses
-	UseForceTrue   = "true"
-	UseVerboseTrue = "true"
-)
-
 // config struct which holds all information required
 type config struct {
 	originalURL    string
@@ -63,6 +21,7 @@ type config struct {
 	pat            string
 	useForce       bool
 	useVerbose     bool
+	useTags        bool
 }
 
 type byteSlice []byte
@@ -70,35 +29,35 @@ type byteSlice []byte
 func main() {
 
 	// get originalURL input (required)
-	originalURL := githubactions.GetInput(OriginalURLInput)
+	originalURL := githubactions.GetInput(OriginalURLInputField)
 	if originalURL == "" {
 		githubactions.Fatalf(ErrNoOriginalURL)
 		return
 	}
 
 	// get originalBranch input (optional)
-	originalBranch := githubactions.GetInput(OriginalBranchInput)
+	originalBranch := githubactions.GetInput(OriginalBranchInputField)
 	if originalBranch == "" {
 		log.Printf(InfoNoOriginalBranch)
 		originalBranch = OriginalDefaultBranch
 	}
 
 	// get mirrorURL input (required)
-	mirrorURL := githubactions.GetInput(MirrorURLInput)
+	mirrorURL := githubactions.GetInput(MirrorURLInputField)
 	if mirrorURL == "" {
 		githubactions.Fatalf(ErrNoMirrorURL)
 		return
 	}
 
 	// get mirrorBranch input (optional)
-	mirrorBranch := githubactions.GetInput(MirrorBranchInput)
+	mirrorBranch := githubactions.GetInput(MirrorBranchInputField)
 	if mirrorBranch == "" {
 		log.Printf(InfoNoMirrorBranch)
 		mirrorBranch = MirrorDefaultBranch
 	}
 
 	// get Personal Access Token encoded in base64 input (required)
-	patEncoded := githubactions.GetInput(PATInput)
+	patEncoded := githubactions.GetInput(PATInputField)
 	if patEncoded == "" {
 		githubactions.Fatalf(ErrNoPAT)
 		return
@@ -119,7 +78,7 @@ func main() {
 
 	// get force input to see if push can use the argument `--force`
 	var useForce = false
-	useForceInput := githubactions.GetInput(UseForceInput)
+	useForceInput := githubactions.GetInput(UseForceInputField)
 	if useForceInput == UseForceTrue {
 		log.Printf(InfoUsingForce)
 		useForce = true
@@ -127,10 +86,18 @@ func main() {
 
 	// get verbose input to check whether or not to use verbose mode
 	var useVerbose = false
-	useVerboseInput := githubactions.GetInput(useVerboseInput)
+	useVerboseInput := githubactions.GetInput(UseVerboseInputField)
 	if useVerboseInput == UseVerboseTrue {
 		log.Println(InfoUsingVerbose)
 		useVerbose = true
+	}
+
+	// get tag input to check whether or not to use tags
+	var useTags = false
+	useTagsInput := githubactions.GetInput(UseTagsInputField)
+	if useTagsInput == UseTagsTrue {
+		log.Println(InfoUsingTags)
+		useTags = true
 	}
 
 	// make config
@@ -142,6 +109,7 @@ func main() {
 		pat:            string(pat),
 		useForce:       useForce,
 		useVerbose:     useVerbose,
+		useTags:        useTags,
 	}
 
 	// convert URLs to use PAT
@@ -190,8 +158,8 @@ func main() {
 	// pulls branch on upstream remote
 	out, err = config.pull(UpstreamRemote, config.originalBranch)
 	if err != nil {
-		githubactions.Fatalf(err.Error())
 		log.Printf("Output: %v\n", out)
+		githubactions.Fatalf(err.Error())
 		return
 	}
 
@@ -217,42 +185,65 @@ func main() {
 // initialize git repository
 func (c *config) gitInit() (output string, err error) {
 	log.Printf("initializing git")
-	return c.command("init")
+
+	defaultCommand := []string{"init"}
+
+	return c.command(defaultCommand...)
+
 }
 
 // adds new remote to local git repository
 // also fetches branches from the repository (--fetch flag at the end)
 func (c *config) addRemote(name string, repo string) (output string, err error) {
 	log.Printf("adding remote: %v\n", name)
-	return c.command("remote", "add", name, repo, "--fetch")
+
+	defaultCommand := []string{"remote", "add", name, repo, "--fetch"}
+
+	return c.command(defaultCommand...)
 }
 
 // checks out specific branch from specific remote in local git repository
 func (c *config) checkout(remote string, branch string) (output string, err error) {
 	log.Printf("checking out: %v/%v\n", remote, branch)
-	return c.command("checkout", fmt.Sprintf("%v/%v", remote, branch))
+
+	defaultCommand := []string{"checkout", fmt.Sprintf("%v/%v", remote, branch)}
+
+	return c.command(defaultCommand...)
 }
 
 // pulls specific branch from specific remote
 func (c *config) pull(remote string, branch string) (output string, err error) {
 	log.Printf("pulling: %v/%v", remote, branch)
-	return c.command("pull", remote, branch)
+
+	defaultCommand := []string{"pull", remote, branch}
+
+	return c.command(defaultCommand...)
 }
 
 // pushes to specific branch on remote
 func (c *config) push(remote string, branch string) (output string, err error) {
 	log.Printf("pushing: %v/%v\n", remote, branch)
+
+	defaultCommand := []string{"push", "--set-upstream", remote, branch}
+
 	if c.useForce {
-		return c.command("push", "--set-upstream", remote, branch, "--force")
+		defaultCommand = append(defaultCommand, "--force")
 	}
 
-	return c.command("push", "--set-upstream", remote, branch)
+	if c.useTags {
+		defaultCommand = append(defaultCommand, "--tags")
+	}
+
+	return c.command(defaultCommand...)
 }
 
 // creates a new branch with specific name
 func (c *config) branch(name string) (output string, err error) {
 	log.Printf("creating branch: %v", name)
-	return c.command("branch", name)
+
+	defaultCommand := []string{"branch", name}
+
+	return c.command(defaultCommand...)
 }
 
 // executes git commands in the TempDir folder

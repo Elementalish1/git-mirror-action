@@ -25,6 +25,9 @@ inputs:
   verbose:
     description: whether or not you want the output to be verbose. Defaults to false
     required: false
+  tags:
+    description: whether or not you want to transfer tags. Defaults to false
+    required: false
 
 runs:
   using: docker
