@@ -15,6 +15,7 @@ const (
 
 	// error messages
 	ErrURLNotHTTPS             = "url is not https"
+	ErrURLEndNotDotGit		   = "url doesn't end with .git, adding it manually (this might be a cause of failure)"
 	ErrNoOriginalURL           = "no original repository url provided"
 	ErrNoMirrorURL             = "no mirror repository url provided"
 	ErrNoPAT                   = "no personal access token provided"

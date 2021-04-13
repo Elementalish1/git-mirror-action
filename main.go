@@ -298,6 +298,11 @@ func convertURL(url string, pat string) (s string, err error) {
 		return "", errors.New(ErrURLNotHTTPS)
 	}
 
+	if url[len(url)-4:] != ".git" {
+		url = fmt.Sprintf("%v.git", url)
+		fmt.Println(errors.New(ErrURLEndNotDotGit))
+	}
+
 	return fmt.Sprintf("https://%v@%v", pat, url[8:]), err
 }
 
