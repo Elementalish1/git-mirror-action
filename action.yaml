@@ -1,8 +1,8 @@
 name: git-mirror-action
 description: mirrors a git repository to another
-icon: archive
-color: purple
 author: Mathis Van Eetvelde
+color: purple
+icon: archive
 inputs:
   originalURL:
     description: url of the repository you want to mirror

@@ -81,6 +81,7 @@ func main() {
 	// get force input to see if push can use the argument `--force`
 	var useForce = false
 	useForceInput := githubactions.GetInput(UseForceInputField)
+
 	if useForceInput == UseForceTrue {
 		log.Printf(InfoUsingForce)
 		useForce = true
@@ -101,7 +102,6 @@ func main() {
 		log.Println(InfoUsingTags)
 		useTags = true
 	}
-
 	// make config
 	config := config{
 		originalURL:    originalURL,
@@ -191,7 +191,6 @@ func (c *config) gitInit() (output string, err error) {
 	defaultCommand := []string{"init"}
 
 	return c.command(defaultCommand...)
-
 }
 
 // adds new remote to local git repository
@@ -246,6 +245,7 @@ func (c *config) branch(name string) (output string, err error) {
 	defaultCommand := []string{"branch", name}
 
 	return c.command(defaultCommand...)
+
 }
 
 // executes git commands in the TempDir folder
