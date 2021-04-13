@@ -67,14 +67,16 @@ func main() {
 	githubactions.AddMask(patEncoded)
 
 	// base64 decode PAT
-	pat, err := base64.StdEncoding.DecodeString(patEncoded)
+	patBytes, err := base64.StdEncoding.DecodeString(patEncoded)
 	if err != nil {
 		githubactions.Fatalf(ErrFailedToBase64DecodePAT)
 		return
 	}
 
+	pat := strings.TrimSuffix(string(patBytes), "\n")
+
 	// add true PAT to mask
-	githubactions.AddMask(string(pat))
+	githubactions.AddMask(pat)
 
 	// get force input to see if push can use the argument `--force`
 	var useForce = false
@@ -106,7 +108,7 @@ func main() {
 		originalBranch: originalBranch,
 		mirrorURL:      mirrorURL,
 		mirrorBranch:   mirrorBranch,
-		pat:            string(pat),
+		pat:            pat,
 		useForce:       useForce,
 		useVerbose:     useVerbose,
 		useTags:        useTags,
