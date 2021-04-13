@@ -26,6 +26,10 @@ Whether you want to use force when pushing into the mirror. (Might be required i
 ### - `verbose`
 **optional -**
 Whether you want to more verbosely log what git commands it executes. Useful for debugging.
+### - `tags`
+**optional -**
+Whether you want to more transfer tags to the mirror repository. Useful for debugging.
+
 ## Example Usage
 Mirrors `torvalds/linux:master` into `mathisve/mirror:mirror` once per day.
 ```
@@ -65,5 +69,6 @@ jobs:
           mirrorBranch: master
           verbose: true
           force: true
+          tags: true
           pat: ${{ secrets.PAT }}
 ```
